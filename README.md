@@ -1,20 +1,30 @@
 # How to run
-**1. Activate environment in terminal**
+1. Activate environment in terminal
+```bash
 source ~/robocup-venv/bin/activate
+```
 
-**2. Start server (in new terminal tab)**
+2. Start server (in new terminal tab)
+
+```bash
 docker run --rm -it -p 3100:3100 -p 3200:3200 rcss3d/rcssserver3d:latest rcssserver3d
+```
 
-**3. Start visualiser (app)**
+3. Start visualiser (app)
+
+```bash
 Open RoboViz.app → connect to localhost:3200
+```
 
-**4. Run team in (firobocup-venv)  terminal tab**
+4. Run team in (firobocup-venv)  terminal tab
+
+```bash
 cd ~/WitsFcCodebase2025/WitsFcCodebase
 for i in 1 2 3 4 5; do (python3 Run_Player.py &); done
 wait
+```
 
-**5. Play on**
-In RoboViz: press O → Play On
+5. In RoboViz: press O → Play On
 
 
 # RoboCup Set-up on macOS (Monterey) Guide
