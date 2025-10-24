@@ -26,6 +26,8 @@ wait
 
 5. In RoboViz: press O → Play On
 
+---
+
 
 # RoboCup Set-up on macOS (Monterey) Guide
 
