@@ -1,4 +1,3 @@
-cat > ~/robocup/cpp/a_star/Makefile <<'MAKE'
 # Build a_star.so via pybind11 on macOS
 CXX ?= clang++
 SRC := $(wildcard *.cpp)
@@ -28,4 +27,3 @@ debug: $(filter-out lib_main.cpp,$(OBJ))
 .PHONY: clean
 clean:
 	rm -f $(OBJ) $(TARGET) debug.bin
-MAKE
