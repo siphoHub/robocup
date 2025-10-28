@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <chrono>
+#include <vector>
 #define SQRT2 1.414213562373095f
 #define LINES 321
 #define COLS 221
@@ -518,22 +519,33 @@ bool is_path_obstructed(float start_x, float start_y, float end_x, float end_y, 
      * - largest radius (equivalent to hard radius, since there is no soft radius)
      */
 
-    float obst[given_obst_size*4/5+16] = {
-         15.02,  1.07, 0.17, 0.17,
-         15.02, -1.07, 0.17, 0.17,
-        -15.02,  1.07, 0.17, 0.17,
-        -15.02, -1.07, 0.17, 0.17
+    constexpr int kGoalObstacleFloats = 16;
+    constexpr int kGivenObstacleStride = 5;
+    constexpr int kObstacleFloats = 4;
+    const int estimated_obstacle_floats =
+        kGoalObstacleFloats + (given_obst_size / kGivenObstacleStride) * kObstacleFloats;
+
+    std::vector<float> obst;
+    obst.reserve(estimated_obstacle_floats);
+
+    const float goal_obstacles[kGoalObstacleFloats] = {
+         15.02f,  1.07f, 0.17f, 0.17f,
+         15.02f, -1.07f, 0.17f, 0.17f,
+        -15.02f,  1.07f, 0.17f, 0.17f,
+        -15.02f, -1.07f, 0.17f, 0.17f
     }; // x, y, hard radius, largest radius
 
+    obst.insert(obst.end(), goal_obstacles, goal_obstacles + kGoalObstacleFloats);
 
-    int obst_size = 16;
-
-    for(int i=0; i<given_obst_size; i+=5){
-        obst[obst_size++] = given_obstacles[i];                                                       // x
-        obst[obst_size++] = given_obstacles[i+1];                                                     // y
-        obst[obst_size++] = fmaxf( 0, fminf(given_obstacles[i+2], MAX_RADIUS) );                      // hard radius
-        obst[obst_size++] = fmaxf( 0, fminf(max(given_obstacles[i+2], given_obstacles[i+3]), MAX_RADIUS) ); // largest radius
+    for(int i=0; i<given_obst_size; i+=kGivenObstacleStride){
+        obst.push_back(given_obstacles[i]); // x
+        obst.push_back(given_obstacles[i+1]); // y
+        obst.push_back(fmaxf(0, fminf(given_obstacles[i+2], MAX_RADIUS))); // hard radius
+        obst.push_back(
+            fmaxf(0, fminf(max(given_obstacles[i+2], given_obstacles[i+3]), MAX_RADIUS))); // largest radius
     }
+
+    const int obst_size = static_cast<int>(obst.size());
 
     //------------------------ Special case (start ~= end): the path is obstructed if start or end are inside any hard circumference
 

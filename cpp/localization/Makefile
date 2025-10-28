@@ -21,7 +21,7 @@ ifeq ($(strip $(GSL_CFLAGS)),)
 $(error GSL headers not found. Install GSL (`brew install gsl`) and ensure pkg-config path is set)
 endif
 
-CXXFLAGS := -O3 -std=c++11 -fPIC -Wall -stdlib=libc++ $(STDINC) $(PYBIND_INCLUDES) $(GSL_CFLAGS)
+CXXFLAGS := -O3 -std=c++17 -fPIC -Wall -stdlib=libc++ $(STDINC) $(PYBIND_INCLUDES) $(GSL_CFLAGS)
 LDFLAGS  := -shared -undefined dynamic_lookup -stdlib=libc++ -isysroot $(SDKROOT)
 LDLIBS   := $(if $(strip $(GSL_LIBS)),$(GSL_LIBS),-lgsl -lgslcblas)
 
@@ -36,7 +36,7 @@ $(TARGET): $(OBJ)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 debug: $(filter-out lib_main.cpp,$(OBJ))
-	$(CXX) -O0 -std=c++14 -Wall -g -stdlib=libc++ -isysroot $(SDKROOT) -o debug.bin debug_main.cc $^ $(LDLIBS)
+	$(CXX) -O0 -std=c++17 -Wall -g -stdlib=libc++ -isysroot $(SDKROOT) -o debug.bin debug_main.cc $^ $(LDLIBS)
 
 .PHONY: clean
 clean:

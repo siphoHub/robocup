@@ -1146,28 +1146,58 @@ void LocalizerV2::print_report() const{
 	const int c1 = c-1;
 	const int cb1 = cb-1;
 
-	const double* ptr = errorSum_fineTune_before;
-	float e1_2d_var = (ptr[4] - (ptr[3]*ptr[3]) / c) / c1;
-	float e1_3d_var = (ptr[6] - (ptr[5]*ptr[5]) / c) / c1;
-	float e1[] = { ptr[3]/c, sqrt(e1_2d_var), ptr[5]/c, sqrt(e1_3d_var), ptr[0]/c, ptr[1]/c, ptr[2]/c };
+    const double* ptr = errorSum_fineTune_before;
+    const float inv_c = 1.0f / static_cast<float>(c);
+    float e1_2d_var = (ptr[4] - (ptr[3]*ptr[3]) / c) / c1;
+    float e1_3d_var = (ptr[6] - (ptr[5]*ptr[5]) / c) / c1;
+    float e1[7];
+    e1[0] = static_cast<float>(ptr[3]) * inv_c;
+    e1[1] = static_cast<float>(sqrt(e1_2d_var));
+    e1[2] = static_cast<float>(ptr[5]) * inv_c;
+    e1[3] = static_cast<float>(sqrt(e1_3d_var));
+    e1[4] = static_cast<float>(ptr[0]) * inv_c;
+    e1[5] = static_cast<float>(ptr[1]) * inv_c;
+    e1[6] = static_cast<float>(ptr[2]) * inv_c;
 
-	ptr = errorSum_fineTune_euclidianDist;
-	float e2_2d_var = (ptr[4] - (ptr[3]*ptr[3]) / c) / c1;
-	float e2_3d_var = (ptr[6] - (ptr[5]*ptr[5]) / c) / c1;
-	float e2[] = { ptr[3]/c, sqrt(e2_2d_var), ptr[5]/c, sqrt(e2_3d_var), ptr[0]/c, ptr[1]/c, ptr[2]/c };
+    ptr = errorSum_fineTune_euclidianDist;
+    float e2_2d_var = (ptr[4] - (ptr[3]*ptr[3]) / c) / c1;
+    float e2_3d_var = (ptr[6] - (ptr[5]*ptr[5]) / c) / c1;
+    float e2[7];
+    e2[0] = static_cast<float>(ptr[3]) * inv_c;
+    e2[1] = static_cast<float>(sqrt(e2_2d_var));
+    e2[2] = static_cast<float>(ptr[5]) * inv_c;
+    e2[3] = static_cast<float>(sqrt(e2_3d_var));
+    e2[4] = static_cast<float>(ptr[0]) * inv_c;
+    e2[5] = static_cast<float>(ptr[1]) * inv_c;
+    e2[6] = static_cast<float>(ptr[2]) * inv_c;
 
-	ptr = errorSum_fineTune_probabilistic;
-	float e3_2d_var = (ptr[4] - (ptr[3]*ptr[3]) / c) / c1;
-	float e3_3d_var = (ptr[6] - (ptr[5]*ptr[5]) / c) / c1;
-	float e3[] = { ptr[3]/c, sqrt(e3_2d_var), ptr[5]/c, sqrt(e3_3d_var), ptr[0]/c, ptr[1]/c, ptr[2]/c };
+    ptr = errorSum_fineTune_probabilistic;
+    float e3_2d_var = (ptr[4] - (ptr[3]*ptr[3]) / c) / c1;
+    float e3_3d_var = (ptr[6] - (ptr[5]*ptr[5]) / c) / c1;
+    float e3[7];
+    e3[0] = static_cast<float>(ptr[3]) * inv_c;
+    e3[1] = static_cast<float>(sqrt(e3_2d_var));
+    e3[2] = static_cast<float>(ptr[5]) * inv_c;
+    e3[3] = static_cast<float>(sqrt(e3_3d_var));
+    e3[4] = static_cast<float>(ptr[0]) * inv_c;
+    e3[5] = static_cast<float>(ptr[1]) * inv_c;
+    e3[6] = static_cast<float>(ptr[2]) * inv_c;
 
-	ptr = errorSum_ball;
-	float e4_2d_var=0, e4_3d_var=0;
-	if(cb1 > 0){
-		e4_2d_var = (ptr[4] - (ptr[3]*ptr[3]) / cb) / cb1;
-		e4_3d_var = (ptr[6] - (ptr[5]*ptr[5]) / cb) / cb1;
-	}
-	float e4[] = { ptr[3]/cb, sqrt(e4_2d_var), ptr[5]/cb, sqrt(e4_3d_var), ptr[0]/cb, ptr[1]/cb, ptr[2]/cb };
+    ptr = errorSum_ball;
+    float e4_2d_var=0, e4_3d_var=0;
+    if(cb1 > 0){
+        e4_2d_var = (ptr[4] - (ptr[3]*ptr[3]) / cb) / cb1;
+        e4_3d_var = (ptr[6] - (ptr[5]*ptr[5]) / cb) / cb1;
+    }
+    const float inv_cb = cb != 0 ? 1.0f / static_cast<float>(cb) : 0.0f;
+    float e4[7];
+    e4[0] = static_cast<float>(ptr[3]) * inv_cb;
+    e4[1] = static_cast<float>(sqrt(e4_2d_var));
+    e4[2] = static_cast<float>(ptr[5]) * inv_cb;
+    e4[3] = static_cast<float>(sqrt(e4_3d_var));
+    e4[4] = static_cast<float>(ptr[0]) * inv_cb;
+    e4[5] = static_cast<float>(ptr[1]) * inv_cb;
+    e4[6] = static_cast<float>(ptr[2]) * inv_cb;
 
 	const int* st = state_counter;
 	printf("---------------------------------- LocalizerV2 Report ----------------------------------\n");
@@ -1246,4 +1276,3 @@ int LocalizerV2::stats_sample_position_error(const Vector3f sample, const Vector
 
 	return 1;
 }
-
