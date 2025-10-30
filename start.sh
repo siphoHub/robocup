@@ -6,5 +6,5 @@ port=${2:-3100}
 
 for i in {1..5}; do
   python3 ./Run_Player.py -i $host -p $port -u $i -t Zayd -P 0 -D 0 &
-  sleep 0.8
+  sleep 0.9
 done
