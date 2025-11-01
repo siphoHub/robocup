@@ -232,8 +232,8 @@ class Agent(Base_Agent):
 
         if not strategyData.IsFormationReady(point_preferences):
             return self.move(strategyData.my_desired_position, orientation=strategyData.my_desried_orientation)
-        #else:
-        #     return self.move(strategyData.my_desired_position, orientation=strategyData.ball_dir)
+        else:
+             return strategyData.Execute(self,self.world)
 
 
     
@@ -329,3 +329,4 @@ class Agent(Base_Agent):
             self.fat_proxy_cmd += (f"(proxy dash {0} {0} {target_dir:.1f})")
         else:
             self.fat_proxy_cmd += (f"(proxy dash {20} {0} {target_dir:.1f})")
+
