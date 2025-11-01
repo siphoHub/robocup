@@ -1,4 +1,4 @@
-from math import asin, atan2, pi, sqrt, cos, sin
+from math import asin, atan2, pi, sqrt
 from math_ops.Math_Ops import Math_Ops as M
 from math_ops.Matrix_3x3 import Matrix_3x3
 import numpy as np
@@ -187,9 +187,9 @@ class Matrix_4x4():
             elif rotation_vec[0]==-1:
                 return self.rotate_x_rad(-rotation_rad, in_place)
             
-        c = cos(rotation_rad)
+        c = np.math.cos(rotation_rad)
         c1 = 1 - c
-        s = sin(rotation_rad)
+        s = np.math.sin(rotation_rad)
         x = rotation_vec[0]
         y = rotation_vec[1]
         z = rotation_vec[2]
@@ -232,8 +232,8 @@ class Matrix_4x4():
         if rotation_rad == 0: 
             return self if in_place else Matrix_4x4(self)
  
-        c = cos(rotation_rad)
-        s = sin(rotation_rad)
+        c = np.math.cos(rotation_rad)
+        s = np.math.sin(rotation_rad)
 
         mat = np.array([
         [1, 0, 0, 0],
@@ -263,8 +263,8 @@ class Matrix_4x4():
         if rotation_rad == 0: 
             return self if in_place else Matrix_4x4(self)
  
-        c = cos(rotation_rad)
-        s = sin(rotation_rad)
+        c = np.math.cos(rotation_rad)
+        s = np.math.sin(rotation_rad)
 
         mat = np.array([
         [ c, 0, s, 0],
@@ -294,8 +294,8 @@ class Matrix_4x4():
         if rotation_rad == 0: 
             return self if in_place else Matrix_4x4(self)
  
-        c = cos(rotation_rad)
-        s = sin(rotation_rad)
+        c = np.math.cos(rotation_rad)
+        s = np.math.sin(rotation_rad)
 
         mat = np.array([
         [ c,-s, 0, 0],
