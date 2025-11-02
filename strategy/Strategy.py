@@ -177,8 +177,10 @@ class Strategy():
     
 
     def findThroughBall(self,ballPos):
-        if self.play_mode in (World.M_OUR_KICKOFF, World.M_THEIR_KICKOFF):
-            # Kickoff pattern: push 6m forward and 6m downward
+        is_central_ball = abs(ballPos[0]) < 0.5 and abs(ballPos[1]) < 0.5
+
+        if self.play_mode in (World.M_OUR_KICKOFF, World.M_THEIR_KICKOFF) or is_central_ball:
+            # Kickoff or central ball pattern: push 6m forward and 6m downward
             return ballPos + np.array((6.0, -6.0))
 
         # Push the through ball forward and mirror vertically based on current ball y
