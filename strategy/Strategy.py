@@ -175,7 +175,7 @@ class Strategy():
             return None
         return sortedOptions[1]+1
     
-
+#hi
     def findThroughBall(self,ballPos):
 
         is_central_ball=abs(ballPos[0])<0.5 and abs(ballPos[1])<0.5
