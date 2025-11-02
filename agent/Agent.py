@@ -16,6 +16,7 @@ class Agent(Base_Agent):
         # define robot type
         robot_type = (0,1,1,1,2,3,3,3,4,4,4)[unum-1]
 
+
         # Initialize base agent
         # Args: Server IP, Agent Port, Monitor Port, Uniform No., Robot Type, Team Name, Enable Log, Enable Draw, play mode correction, Wait for Server, Hear Callback
         super().__init__(host, agent_port, monitor_port, unum, robot_type, team_name, enable_log, enable_draw, True, wait_for_server, None)
