@@ -188,10 +188,7 @@ class Agent(Base_Agent):
         elif self.state == 1 or (behavior.is_ready("Get_Up") and self.fat_proxy_cmd is None):
             self.state = 0 if behavior.execute("Get_Up") else 1
         else:
-            if strategyData.play_mode != self.world.M_BEFORE_KICKOFF:
-                self.select_skill(strategyData)
-            else:
-                pass
+            self.select_skill(strategyData)
 
 
         #--------------------------------------- 3. Broadcast
@@ -225,39 +222,32 @@ class Agent(Base_Agent):
 
         formation_positions = GenerateBasicFormation()
         point_preferences = role_assignment(strategyData.teammate_positions, formation_positions)
-        strategyData.my_desired_position = point_preferences[strategyData.player_unum]
-        strategyData.my_desried_orientation = strategyData.GetDirectionRelativeToMyPositionAndTarget(strategyData.my_desired_position)
 
-        drawer.line(strategyData.mypos, strategyData.my_desired_position, 2,drawer.Color.blue,"target line")
-
-        if not strategyData.IsFormationReady(point_preferences):
-            return self.move(strategyData.my_desired_position, orientation=strategyData.my_desried_orientation)
-        #else:
-        #     return self.move(strategyData.my_desired_position, orientation=strategyData.ball_dir)
-
-
-    
-        #------------------------------------------------------
-        # Example Behaviour
-        target = (15,0) # Opponents Goal
-
-        if strategyData.active_player_unum == strategyData.robot_model.unum: # I am the active player 
-            drawer.annotation((0,10.5), "Pass Selector Phase" , drawer.Color.yellow, "status")
+        desired_position = point_preferences.get(strategyData.player_unum)
+        if desired_position is not None:
+            strategyData.my_desired_position = desired_position
+            strategyData.my_desired_orientation = strategyData.GetDirectionRelativeToMyPositionAndTarget(strategyData.my_desired_position)
+            drawer.line(strategyData.mypos, strategyData.my_desired_position, 2, drawer.Color.blue, "target line")
         else:
-            drawer.clear_player()
+            drawer.clear("target line")
+            strategyData.my_desired_orientation = strategyData.ball_dir
 
-        if strategyData.active_player_unum == strategyData.robot_model.unum: # I am the active player 
-            pass_reciever_unum = strategyData.player_unum + 1 # This starts indexing at 1, therefore player 1 wants to pass to player 2
-            if pass_reciever_unum != 6:
-                target = strategyData.teammate_positions[pass_reciever_unum-1] # This is 0 indexed so we actually need to minus 1 
-            else:
-                target = (15,0) 
+        formation_ready = strategyData.IsFormationReady(point_preferences)
+        current_state = strategyData.GameStates(self.world)
 
-            drawer.line(strategyData.mypos, target, 2,drawer.Color.red,"pass line")
-            return self.kickTarget(strategyData,strategyData.mypos,target)
-        else:
+        kickoff_override = self.world.play_mode == self.world.M_BEFORE_KICKOFF and strategyData.player_unum == 3
+
+        if kickoff_override:
             drawer.clear("pass line")
-            return self.move(strategyData.my_desired_position, orientation=strategyData.ball_dir)
+            drawer.clear_player()
+            return strategyData.Execute(self, self.world, state=current_state)
+
+
+
+        drawer.clear("pass line")
+        drawer.clear_player()
+
+        return strategyData.Execute(self, self.world, state=current_state)
         
 
 
