@@ -1,7 +1,9 @@
 import numpy as np
 
-def euclidean(p1,p2):
-    return np.linalg.norm(np.array(p1)-np.array(p2))
+def euclidean(p1, p2):
+    if p1 is None or p2 is None:
+        return float('inf')
+    return np.linalg.norm(np.array(p1) - np.array(p2))
 
 def role_assignment(teammate_positions, formation_positions):
 

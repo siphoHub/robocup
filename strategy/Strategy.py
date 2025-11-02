@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from math_ops.Math_Ops import Math_Ops as M
+from world.World import World
 
 
 
@@ -48,8 +49,9 @@ class Strategy():
         self.ball_dist = np.linalg.norm(self.ball_vec)
         self.ball_sq_dist = self.ball_dist * self.ball_dist # for faster comparisons
         self.ball_speed = np.linalg.norm(world.get_ball_abs_vel(6)[:2])
-        
-        self.goal_dir = M.target_abs_angle(self.ball_2d,(15.05,0))
+
+        self.opponent_goal = np.array((15.0, 0.0))
+        self.goal_dir = M.target_abs_angle(self.ball_2d, self.opponent_goal)
 
         self.PM_GROUP = world.play_mode_group
 
@@ -108,8 +110,7 @@ class Strategy():
 ## Helpers ##
 
     def BallDistanceToOppGoal(self):
-        opp_goal= np.array((15.0,0))
-        return np.linalg.norm(self.ball_2d-opp_goal)
+        return np.linalg.norm(self.ball_2d - self.opponent_goal)
     
     def BallDistanceToOwnGoal(self):
         own_goal= np.array((-15.0,0))
@@ -119,8 +120,8 @@ class Strategy():
     def GameStates(self,world):
 
         weAreCloser=self.min_teammate_ball_dist<=self.min_opponent_ball_dist
-        closeToOppGoal= self.BallDistanceToOppGoal()<6.0
-        closeToOwnGoal= self.BallDistanceToOwnGoal()<6.0
+        closeToOppGoal= self.BallDistanceToOppGoal()<5.0
+        closeToOwnGoal= self.BallDistanceToOwnGoal()<5.0
         state=0
 
         #Attack strat/ tikki Takka
@@ -176,16 +177,21 @@ class Strategy():
     
 
     def findThroughBall(self,ballPos):
+        if self.play_mode in (World.M_OUR_KICKOFF, World.M_THEIR_KICKOFF):
+            # Kickoff pattern: push 6m forward and 6m downward
+            return ballPos + np.array((6.0, -6.0))
 
-        d1=np.array([1.0,0.0])
-        if self.side!=0:
-            d1=np.array([-1.0,0.0])
+        # Push the through ball forward and mirror vertically based on current ball y
+        offset = np.array((5.0, -5.0)) if ballPos[1] >= 0 else np.array((5.0, 5.0))
+        target = ballPos + offset
 
-        d2=np.array([0.0,1.0])
-        if self.player_unum%2==0:
-            d2=np.array([0.0,-1.0])
-        
-        return ballPos + 5.0*d1 +2.0*d2
+        if ballPos[0] > 10.0:
+            target[1] = np.clip(target[1], -1.0, 1.0)
+            target[0] = min(target[0], 13.0)
+        elif ballPos[0] > 7.0:
+            target[1] = np.clip(target[1], -3.0, 3.0)
+
+        return target
 
     def makeTriangle(self,agent,world, compact=False, defensive=False):
         scale=3.0
@@ -217,6 +223,7 @@ class Strategy():
     def Execute(self,agent,world,state=None):
 
         state=self.GameStates(world)
+        opponent_goal = tuple(self.opponent_goal)
 
         #Attack strat/ tikki Takka
         if state==1: 
@@ -227,7 +234,7 @@ class Strategy():
                     return agent.kickTarget(self,self.mypos,receiverPos)
                 
                 else: #no one forward
-                    return agent.kickTarget(self,self.mypos,(15.0,0)) #shoot. maybe change this to pass backwards. so can remove this else
+                    return agent.kickTarget(self,self.mypos,opponent_goal) #shoot. maybe change this to pass backwards. so can remove this else
 
             elif self.player_unum==self.SecondClosest():
                 posTarget=self.findThroughBall(self.ball_2d)
@@ -240,7 +247,7 @@ class Strategy():
         #Shooting
         elif state==2:  
             if self.player_unum==self.active_player_unum:
-                return agent.kickTarget(self,self.mypos,(15.0,0)) # maybe change to bottoms corners of goals
+                return agent.kickTarget(self,self.mypos,opponent_goal) # maybe change to bottoms corners of goals
             
             else: 
                 return self.makeTriangle(agent,world,compact=True)
