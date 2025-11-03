@@ -4,6 +4,9 @@ from math_ops.Math_Ops import Math_Ops as M
 from world.World import World
 
 class Strategy():
+    FIELD_X_BOUNDS = (-15.0, 15.0)
+    FIELD_Y_BOUNDS = (-10.0, 10.0)
+
     def __init__(self, world):
 
         self.play_mode = world.play_mode
@@ -81,6 +84,12 @@ class Strategy():
 
         self.my_desired_position = self.mypos
         self.my_desired_orientation = self.ball_dir
+
+    def _clamp_to_field(self, target):
+        """Keep 2D target inside the playable pitch before issuing movement commands."""
+        x = float(np.clip(target[0], *self.FIELD_X_BOUNDS))
+        y = float(np.clip(target[1], *self.FIELD_Y_BOUNDS))
+        return np.array((x, y))
 
 
     def GenerateTeamToTargetDistanceArray(self, target, world):
@@ -184,7 +193,7 @@ class Strategy():
         is_central_ball=abs(ballPos[0])<0.5 and abs(ballPos[1])<0.5
         if self.play_mode in (World.M_OUR_KICKOFF, World.M_THEIR_KICKOFF) or is_central_ball:
             # Kickoff pattern: push 6m forward and 6m downward
-            return ballPos + np.array((5.0, -5.0))
+            return self._clamp_to_field(ballPos + np.array((5.0, -5.0)))
 
         # Push the through ball forward and mirror vertically based on current ball y
         offset = np.array((5.0, -5.0)) if ballPos[1] >= 0 else np.array((5.0, 0.0))
@@ -202,7 +211,7 @@ class Strategy():
         #elif ballPos[0] > 7.0 and ballPos[1] < 0:
             #target[1] = np.clip(target[1], 3.0, 0.0)
 
-        return target
+        return self._clamp_to_field(target)
 
     def makeTriangle(self,agent,world, compact=False, defensive=False):
         scale=3.0
@@ -214,7 +223,7 @@ class Strategy():
         init=[(-scale,-scale), (-scale,0), (scale,scale)]
         idx= (self.player_unum -1)%len(init)
         offset= np.array(init[idx])
-        target=self.ball_2d+offset
+        target=self._clamp_to_field(self.ball_2d+offset)
 
         return agent.move(target)
 
@@ -224,7 +233,7 @@ class Strategy():
         
         ys=[-4,-2,0,2,4]
         x=-14 # maybe change to -15 on goal line
-        target=(x,ys[self.player_unum -1])
+        target=self._clamp_to_field(np.array((x,ys[self.player_unum -1])))
 
         return agent.move(target)
 
@@ -266,7 +275,7 @@ class Strategy():
 
             elif self.player_unum==self.SecondClosest():
                 posTarget=self.findThroughBall(self.ball_2d)
-                return agent.move(posTarget)
+                return agent.move(self._clamp_to_field(posTarget))
 
             else:
                 return self.makeTriangle(agent,world)
@@ -284,11 +293,11 @@ class Strategy():
         #Defend
         elif state==3:
             if self.player_unum==self.active_player_unum:
-                return agent.kick() if np.linalg.norm(np.array(self.ball_2d)-np.array(self.my_head_pos_2d))<0.7 else agent.move(world.ball_abs_pos[:2])
+                return agent.kick() if np.linalg.norm(np.array(self.ball_2d)-np.array(self.my_head_pos_2d))<0.7 else agent.move(self._clamp_to_field(world.ball_abs_pos[:2]))
 
             
             elif self.player_unum==self.SecondClosest():
-                return agent.move(world.ball_abs_pos[:2])
+                return agent.move(self._clamp_to_field(world.ball_abs_pos[:2]))
 
             else: 
                 return self.makeTriangle(agent,world,defensive=True)
@@ -296,15 +305,15 @@ class Strategy():
         #defend & park the bus lol
         elif state==4:
             if self.player_unum==self.active_player_unum:
-                return agent.kick() if np.linalg.norm(np.array(self.ball_2d)-np.array(self.my_head_pos_2d))<0.7 else agent.move(world.ball_abs_pos[:2]) 
+                return agent.kick() if np.linalg.norm(np.array(self.ball_2d)-np.array(self.my_head_pos_2d))<0.7 else agent.move(self._clamp_to_field(world.ball_abs_pos[:2])) 
 
             
             elif self.player_unum==self.SecondClosest():
-                return agent.move(world.ball_abs_pos[:2])
+                return agent.move(self._clamp_to_field(world.ball_abs_pos[:2]))
 
             else: 
                 return self.parkTheBus(agent,world)
             
 
         else:
-            return agent.move(self.my_desired_position)
+            return agent.move(self._clamp_to_field(self.my_desired_position))
