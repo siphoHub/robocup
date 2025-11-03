@@ -10,6 +10,12 @@ class Strategy():
         World.M_OUR_DIR_FREE_KICK,
         World.M_OUR_CORNER_KICK,
     }
+    FREEZE_PLAY_MODES = {
+        World.M_THEIR_KICKOFF,
+        World.M_THEIR_FREE_KICK,
+        World.M_THEIR_DIR_FREE_KICK,
+        World.M_THEIR_CORNER_KICK,
+    }
 
     set_piece_last_kicker = None
     set_piece_waiting_for_other_touch = False
@@ -18,6 +24,7 @@ class Strategy():
     pending_set_piece_ball_pos = None
     pending_set_piece_time_ms = 0
     last_play_mode = None
+    set_piece_freeze_until_ms = 0
     FIELD_X_BOUNDS = (-15.0, 15.0)
     FIELD_Y_BOUNDS = (-10.0, 10.0)
 
@@ -138,6 +145,8 @@ class Strategy():
         now = self.time_ms
 
         if Strategy.last_play_mode != self.play_mode:
+            if self.play_mode in Strategy.FREEZE_PLAY_MODES:
+                Strategy.set_piece_freeze_until_ms = max(Strategy.set_piece_freeze_until_ms, now + 14500)
             if self.play_mode in Strategy.SET_PIECE_PLAY_MODES:
                 Strategy.set_piece_waiting_for_other_touch = False
                 Strategy.set_piece_last_kicker = None
@@ -192,6 +201,16 @@ class Strategy():
         offset_x = -0.6 if self.side == 0 else 0.6
         hold_target = tuple(self.ball_2d + np.array((offset_x, 0.0)))
         return agent.move(hold_target)
+
+    def _hold_position(self, agent):
+        target = tuple(self._clamp_to_field(np.array(self.mypos)))
+        return agent.move(target)
+
+    def _is_freeze_play_mode(self):
+        return self.play_mode in Strategy.FREEZE_PLAY_MODES
+
+    def _is_set_piece_freeze_active(self):
+        return self._is_freeze_play_mode() and self.time_ms < Strategy.set_piece_freeze_until_ms
 
     def _attempt_kick(self, agent, target):
         if self._is_kick_blocked():
@@ -341,6 +360,8 @@ class Strategy():
     def Execute(self,agent,world,state=None):
 
         state=self.GameStates(world)
+        if self._is_set_piece_freeze_active():
+            return self._hold_position(agent)
         opponent_goal = tuple(self.opponent_goal)
 
 
