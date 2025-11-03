@@ -3,9 +3,6 @@ import numpy as np
 from math_ops.Math_Ops import Math_Ops as M
 from world.World import World
 
-
-countK=0
-
 class Strategy():
     def __init__(self, world):
 
@@ -51,12 +48,12 @@ class Strategy():
         self.ball_sq_dist = self.ball_dist * self.ball_dist # for faster comparisons
         self.ball_speed = np.linalg.norm(world.get_ball_abs_vel(6)[:2])
 
-        if self.ball_2d[1] > 0.5: 
-            self.opponent_goal = np.array((15.5, 0.5))
-        elif self.ball_2d[1] < -0.5:      
-            self.opponent_goal = np.array((15.5, -0.5))
+        if self.ball_2d[1] > 0.05:
+            self.opponent_goal = np.array((15.25, 0.4))
+        elif self.ball_2d[1] < -0.05:      
+            self.opponent_goal = np.array((15.25, -0.4))
         else:                            
-            self.opponent_goal = np.array((15.5, 0.0))
+            self.opponent_goal = np.array((15.25, 0.0))
 
         self.goal_dir = M.target_abs_angle(self.ball_2d, self.opponent_goal)
 
@@ -193,11 +190,17 @@ class Strategy():
         offset = np.array((5.0, -5.0)) if ballPos[1] >= 0 else np.array((5.0, 0.0))
         target = ballPos + offset
 
-        if ballPos[0] > 10.0:
+        if ballPos[0] > 10.0 and ballPos[1] >= 0:
             target[1] = np.clip(target[1], -1.0, 1.0)
             target[0] = min(target[0], 13.0)
-        elif ballPos[0] > 7.0:
+        elif ballPos[0] > 7.0 and ballPos[1] >= 0:
             target[1] = np.clip(target[1], -3.0, 3.0)
+
+        elif ballPos[0] > 10.0 and ballPos[1] < 0:
+            target[1] = np.clip(target[1], -1.0, 1.0)
+            target[0] = min(target[0], 13.0)
+        #elif ballPos[0] > 7.0 and ballPos[1] < 0:
+            #target[1] = np.clip(target[1], 3.0, 0.0)
 
         return target
 
@@ -235,26 +238,29 @@ class Strategy():
 
 
         #Attack strat/ tikki Takka
-        if state==1: 
+        if state==1:
+            is_central_ball= abs(self.ball_2d[0]) < 0.5 and abs(self.ball_2d[1]) < 0.5
             
             if self.player_unum==self.active_player_unum:
-                receiverPos= self.getForwardTeammate()
 
+                if self.ball_2d[1]<0 and (self.ball_2d[0]>0 and self.ball_2d[0]<7.0):
+
+                    return agent.kickTarget(self,self.mypos,self.ball_2d+(6.0,0.0))    
+                
+                            
+                receiverPos= self.getForwardTeammate()
                 if receiverPos is not None:
-                    return agent.kickTarget(self,self.mypos,receiverPos)
+                    return agent.kickTarget(self,self.mypos,receiverPos+(1.0,1.0))
                 
                 else: #no one forward
 
-                    global countK
-                    is_central_ball= abs(self.ball_2d[0]) < 0.5 and abs(self.ball_2d[1]) < 0.5
 
-                    if countK==1:
-                        countK=0
-                        return agent.kickTarget(self, self.mypos, self.ball_2d+(6.0,0))
+                    if self.play_mode==World.M_OUR_KICKOFF or is_central_ball:
+                        return agent.kickTarget(self, self.mypos, (4.0, -6.0))
+                    
+                    if self.ball_2d[1]<0 and (self.ball_2d[0]>0 and self.ball_2d[0]<7.0):
 
-                    elif self.play_mode is World.M_OUR_KICKOFF or is_central_ball:
-                        countK += 1
-                        return agent.kickTarget(self, self.mypos, (4.0,-6.0))
+                        return agent.kickTarget(self,self.mypos,self.ball_2d+(6.0,0.0))
 
                     return agent.kickTarget(self,self.mypos,opponent_goal)
 
