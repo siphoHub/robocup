@@ -4,6 +4,7 @@ from math_ops.Math_Ops import Math_Ops as M
 from world.World import World
 
 
+countK=0
 
 class Strategy():
     def __init__(self, world):
@@ -50,7 +51,13 @@ class Strategy():
         self.ball_sq_dist = self.ball_dist * self.ball_dist # for faster comparisons
         self.ball_speed = np.linalg.norm(world.get_ball_abs_vel(6)[:2])
 
-        self.opponent_goal = np.array((15.0, 0.0))
+        if self.ball_2d[1] > 0.5: 
+            self.opponent_goal = np.array((15.5, 0.5))
+        elif self.ball_2d[1] < -0.5:      
+            self.opponent_goal = np.array((15.5, -0.5))
+        else:                            
+            self.opponent_goal = np.array((15.5, 0.0))
+
         self.goal_dir = M.target_abs_angle(self.ball_2d, self.opponent_goal)
 
         self.PM_GROUP = world.play_mode_group
@@ -175,13 +182,12 @@ class Strategy():
             return None
         return sortedOptions[1]+1
     
-#hi
     def findThroughBall(self,ballPos):
 
         is_central_ball=abs(ballPos[0])<0.5 and abs(ballPos[1])<0.5
         if self.play_mode in (World.M_OUR_KICKOFF, World.M_THEIR_KICKOFF) or is_central_ball:
             # Kickoff pattern: push 6m forward and 6m downward
-            return ballPos + np.array((6.0, -6.0))
+            return ballPos + np.array((5.0, -5.0))
 
         # Push the through ball forward and mirror vertically based on current ball y
         offset = np.array((5.0, -5.0)) if ballPos[1] >= 0 else np.array((5.0, 0.0))
@@ -227,8 +233,10 @@ class Strategy():
         state=self.GameStates(world)
         opponent_goal = tuple(self.opponent_goal)
 
+
         #Attack strat/ tikki Takka
         if state==1: 
+            
             if self.player_unum==self.active_player_unum:
                 receiverPos= self.getForwardTeammate()
 
@@ -237,13 +245,22 @@ class Strategy():
                 
                 else: #no one forward
 
-                    is_central_ball=abs(self.ball_2d[0])<0.5 and abs(self.ball_2d[1]<0.5)
-                    target= (5.0,-6.0) if (self.play_mode in(World.M_OUR_KICKOFF,World.M_THEIR_KICKOFF) or is_central_ball ) else opponent_goal
-                    return agent.kickTarget(self,self.mypos,target) #shoot. maybe change this to pass backwards. so can remove this else
+                    global countK
+                    is_central_ball= abs(self.ball_2d[0]) < 0.5 and abs(self.ball_2d[1]) < 0.5
+
+                    if countK==1:
+                        countK=0
+                        return agent.kickTarget(self, self.mypos, self.ball_2d+(6.0,0))
+
+                    elif self.play_mode is World.M_OUR_KICKOFF or is_central_ball:
+                        countK += 1
+                        return agent.kickTarget(self, self.mypos, (4.0,-6.0))
+
+                    return agent.kickTarget(self,self.mypos,opponent_goal)
 
             elif self.player_unum==self.SecondClosest():
                 posTarget=self.findThroughBall(self.ball_2d)
-                return agent.move(posTarget) #maybe +0.5 in x so that it is through ball
+                return agent.move(posTarget)
 
             else:
                 return self.makeTriangle(agent,world)
@@ -252,7 +269,7 @@ class Strategy():
         #Shooting
         elif state==2:  
             if self.player_unum==self.active_player_unum:
-                return agent.kickTarget(self,self.mypos,opponent_goal) # maybe change to bottoms corners of goals
+                return agent.kickTarget(self,self.mypos,opponent_goal)
             
             else: 
                 return self.makeTriangle(agent,world,compact=True)
