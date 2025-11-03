@@ -49,9 +49,9 @@ class Strategy():
         self.ball_speed = np.linalg.norm(world.get_ball_abs_vel(6)[:2])
 
         if self.ball_2d[1] > 0.05:
-            self.opponent_goal = np.array((15.25, 0.4))
+            self.opponent_goal = np.array((15.25, 0.45))
         elif self.ball_2d[1] < -0.05:      
-            self.opponent_goal = np.array((15.25, -0.4))
+            self.opponent_goal = np.array((15.25, -0.45))
         else:                            
             self.opponent_goal = np.array((15.25, 0.0))
 
@@ -124,8 +124,8 @@ class Strategy():
     def GameStates(self,world):
 
         weAreCloser=self.min_teammate_ball_dist<=self.min_opponent_ball_dist
-        closeToOppGoal= self.BallDistanceToOppGoal()<5.0
-        closeToOwnGoal= self.BallDistanceToOwnGoal()<5.0
+        closeToOppGoal= self.BallDistanceToOppGoal()<6.5
+        closeToOwnGoal= self.BallDistanceToOwnGoal()<6.5
         state=0
 
         #Attack strat/ tikki Takka
@@ -133,15 +133,15 @@ class Strategy():
             state=1
         
         #Shoot
-        elif (weAreCloser and closeToOppGoal):
-            state =2
+        elif (closeToOppGoal):
+            state=2
         
         #Defend
         elif(not weAreCloser and not closeToOwnGoal):
             state=3
 
         #defend & park the bus lol
-        elif(not weAreCloser and closeToOwnGoal):
+        elif(closeToOwnGoal):
             state=4
 
         else:
