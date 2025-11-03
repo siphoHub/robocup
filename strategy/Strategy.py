@@ -73,12 +73,10 @@ class Strategy():
         self.ball_sq_dist = self.ball_dist * self.ball_dist # for faster comparisons
         self.ball_speed = np.linalg.norm(world.get_ball_abs_vel(6)[:2])
 
-        if self.ball_2d[1] > 0.05:
+        if self.ball_2d[1]>=0:
             self.opponent_goal = np.array((15.25, 0.45))
-        elif self.ball_2d[1] < -0.05:      
+        else:     
             self.opponent_goal = np.array((15.25, -0.45))
-        else:                            
-            self.opponent_goal = np.array((15.25, 0.0))
 
         self.goal_dir = M.target_abs_angle(self.ball_2d, self.opponent_goal)
 
