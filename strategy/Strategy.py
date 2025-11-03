@@ -183,24 +183,34 @@ class Strategy():
 
         is_central_ball=abs(ballPos[0])<0.5 and abs(ballPos[1])<0.5
         if self.play_mode in (World.M_OUR_KICKOFF, World.M_THEIR_KICKOFF) or is_central_ball:
-            # Kickoff pattern: push 6m forward and 6m downward
-            return ballPos + np.array((5.0, -5.0))
+            # Kickoff pattern: push 4m forward and 6m downward
+            return ballPos + np.array((4.0, -6.0))
 
         # Push the through ball forward and mirror vertically based on current ball y
-        offset = np.array((5.0, -5.0)) if ballPos[1] >= 0 else np.array((5.0, 0.0))
+        offset = np.array((0.0,0.0))
+
+        if ballPos[1] >= 0:
+            offset = np.array((5.0, -5.0))
+        elif ballPos[1] < 0:
+            offset = np.array((5.0, 0.0))
+
         target = ballPos + offset
 
-        if ballPos[0] > 10.0 and ballPos[1] >= 0:
-            target[1] = np.clip(target[1], -1.0, 1.0)
-            target[0] = min(target[0], 13.0)
-        elif ballPos[0] > 7.0 and ballPos[1] >= 0:
-            target[1] = np.clip(target[1], -3.0, 3.0)
+        if ballPos[1] >= 0:
+            if ballPos[0] > 10.0:
+                target[1] = np.clip(target[1], -1.0, 1.0)
+                target[0] = min(target[0], 13.0)
+            elif ballPos[0] > 7.0:
+                target[1] = np.clip(target[1], -1.0, 3.0)
+            elif ballPos[0] >= 0.0:
+                target[1] = max(target[1], -4.0)
 
         elif ballPos[0] > 10.0 and ballPos[1] < 0:
             target[1] = np.clip(target[1], -1.0, 1.0)
             target[0] = min(target[0], 13.0)
-        #elif ballPos[0] > 7.0 and ballPos[1] < 0:
-            #target[1] = np.clip(target[1], 3.0, 0.0)
+        elif ballPos[0] > 5.0 and ballPos[1] < 0:
+            lateral_floor = max(ballPos[1], -5.0)
+            target[1] = max(target[1], lateral_floor)
 
         return target
 
@@ -240,28 +250,32 @@ class Strategy():
         #Attack strat/ tikki Takka
         if state==1:
             is_central_ball= abs(self.ball_2d[0]) < 0.5 and abs(self.ball_2d[1]) < 0.5
-            
+            through_target = self.findThroughBall(self.ball_2d)
+            receiverPos= self.getForwardTeammate()
+
+            #if I am closest to ball
             if self.player_unum==self.active_player_unum:
 
-                if self.ball_2d[1]<0 and (self.ball_2d[0]>0 and self.ball_2d[0]<7.0):
-
-                    return agent.kickTarget(self,self.mypos,self.ball_2d+(6.0,0.0))    
+                #and if ball is behind x = 13
+                if self.ball_2d[0]<=13 and self.ball_2d[0]>=-0.5: 
+                    return agent.kickTarget(self,self.mypos,through_target)    
                 
-                            
-                receiverPos= self.getForwardTeammate()
-                if receiverPos is not None:
-                    return agent.kickTarget(self,self.mypos,receiverPos+(1.0,1.0))
+                if self.ball_2d[0]<-0.5: 
+                    return agent.kickTarget(self,self.mypos,receiverPos)    
                 
-                else: #no one forward
-
-
+                # and if there is a reciever ahead of me, closest to the opp goals,
+                # and ball is ahead of x = 10    
+                # (we want more accurate passes closer to the goal)            
+                elif receiverPos is not None and self.ball_2d[0]>13: 
+                    return agent.kickTarget(self,self.mypos,receiverPos+(0.5,0.5))
+                
+                # and no one ahead of me
+                else:
+                    #and its kick off
                     if self.play_mode==World.M_OUR_KICKOFF or is_central_ball:
-                        return agent.kickTarget(self, self.mypos, (4.0, -6.0))
-                    
-                    if self.ball_2d[1]<0 and (self.ball_2d[0]>0 and self.ball_2d[0]<7.0):
+                        return agent.kickTarget(self, self.mypos, through_target)
 
-                        return agent.kickTarget(self,self.mypos,self.ball_2d+(6.0,0.0))
-
+                    #shoot
                     return agent.kickTarget(self,self.mypos,opponent_goal)
 
             elif self.player_unum==self.SecondClosest():
